@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Habit Streak</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="background-blobs">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+        <div class="blob blob-3"></div>
+    </div>
+
+    <main class="glass-container">
+        <header>
+            <h1 id="month-year-display">Month Year</h1>
+            <div class="total-gains-container">
+                <span class="label">Total Gains</span>
+                <span id="total-count">0</span>
+            </div>
+        </header>
+
+        <section class="calendar-wrapper">
+            <div class="weekdays-grid">
+                <div>Sun</div>
+                <div>Mon</div>
+                <div>Tue</div>
+                <div>Wed</div>
+                <div>Thu</div>
+                <div>Fri</div>
+                <div>Sat</div>
+            </div>
+            <div id="calendar-grid" class="calendar-grid">
+                <!-- Days will be injected here via JS -->
+            </div>
+        </section>
+
+        <footer>
+            <p class="hint">Click to Add · Hold to Reduce</p>
+        </footer>
+    </main>
+
+    <script src="script.js"></script>
+</body>
+</html>
