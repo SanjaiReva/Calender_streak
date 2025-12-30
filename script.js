@@ -2,38 +2,64 @@ document.addEventListener('DOMContentLoaded', () => {
     const calendarGrid = document.getElementById('calendar-grid');
     const totalCountDisplay = document.getElementById('total-count');
     const monthYearDisplay = document.getElementById('month-year-display');
+    const prevMonthBtn = document.getElementById('prev-month');
+    const nextMonthBtn = document.getElementById('next-month');
 
     const STORAGE_KEY = 'habit_tracker_data';
     let habitData = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {};
 
-    const today = new Date();
-    const currentMonth = today.getMonth();
-    const currentYear = today.getFullYear();
-    const currentDate = today.getDate();
+    let today = new Date();
+    let currentMonth = today.getMonth();
+    let currentYear = today.getFullYear();
+    const currentDate = today.getDate(); // Keep track of "today" for highlighting
 
     const monthNames = ["January", "February", "March", "April", "May", "June",
         "July", "August", "September", "October", "November", "December"
     ];
 
-    monthYearDisplay.textContent = `${monthNames[currentMonth]} ${currentYear}`;
 
-    // Helper: key for local storage per month to avoid massive keys? 
-    // Actually, simple key "YYYY-MM-DD" is best.
+    function updateDateDisplay() {
+        monthYearDisplay.textContent = `${monthNames[currentMonth]} ${currentYear}`;
+    }
+
+    // Initialize display
+    updateDateDisplay();
+
+    // Event Listeners for Month Navigation
+    if (prevMonthBtn) prevMonthBtn.addEventListener('click', () => changeMonth(-1));
+    if (nextMonthBtn) nextMonthBtn.addEventListener('click', () => changeMonth(1));
+
+    function changeMonth(offset) {
+        currentMonth += offset;
+        if (currentMonth < 0) {
+            currentMonth = 11;
+            currentYear--;
+        } else if (currentMonth > 11) {
+            currentMonth = 0;
+            currentYear++;
+        }
+        updateDateDisplay();
+        renderCalendar();
+    }
+
 
     function getKey(day) {
+        // Warning: This key needs to be consistent. 
+        // Previously: `${currentYear}-${currentMonth}-${day}`
+        // We must ensure 'currentMonth' is 0-indexed in the key if that's how it was stored.
+        // JS getMonth() is 0-11, so yes.
         return `${currentYear}-${currentMonth}-${day}`;
     }
 
     function updateTotal() {
-        // Calculate total for only THIS month
+        // Calculate total for only THIS month currently viewed
         let total = 0;
-        // Logic: Iterate through all days of this month and sum up
         const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
         for (let d = 1; d <= daysInMonth; d++) {
             total += (habitData[getKey(d)] || 0);
         }
 
-        // Animate counter effect (basic)
+        // Basic "animation" just by setting text
         totalCountDisplay.textContent = total;
     }
 
@@ -44,7 +70,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function renderCalendar() {
         calendarGrid.innerHTML = '';
-
         const firstDayOfMonth = new Date(currentYear, currentMonth, 1).getDay();
         const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
 
@@ -62,7 +87,13 @@ document.addEventListener('DOMContentLoaded', () => {
             dayCard.classList.add('day-card');
 
             if (count > 0) dayCard.classList.add('active');
-            if (day === currentDate) dayCard.classList.add('today');
+
+            // Highlight today only if we are in the current month/year
+            if (day === currentDate &&
+                currentMonth === today.getMonth() &&
+                currentYear === today.getFullYear()) {
+                dayCard.classList.add('today');
+            }
 
             // HTML Structure of the card
             dayCard.innerHTML = `
@@ -70,54 +101,25 @@ document.addEventListener('DOMContentLoaded', () => {
                 <span class="day-count" id="count-${day}">${count > 0 ? count : ''}</span>
             `;
 
-            // Interaction Handlers
-            let holdTimer;
-            let isLongPress = false;
+            // Interaction Handlers: Click vs Double Click
+            let clickCount = 0;
+            let clickTimer = null;
 
-            // MOUSE EVENTS
-            dayCard.addEventListener('mousedown', (e) => {
-                if (e.button !== 0) return; // Only left click
-                isLongPress = false;
-                holdTimer = setTimeout(() => {
-                    isLongPress = true;
+            dayCard.addEventListener('click', (e) => {
+                e.preventDefault(); // prevent unwanted behaviors
+                clickCount++;
+
+                if (clickCount === 1) {
+                    clickTimer = setTimeout(() => {
+                        // Single click action
+                        clickCount = 0;
+                        increment(day, dayCard);
+                    }, 250); // 250ms delay to wait for potential second click
+                } else if (clickCount === 2) {
+                    // Double click action
+                    clearTimeout(clickTimer);
+                    clickCount = 0;
                     decrement(day, dayCard);
-                    // Continue decrementing if holding?
-                    // Optional: Setup interval for continuous decrement
-                }, 500);
-            });
-
-            dayCard.addEventListener('mouseup', () => {
-                clearTimeout(holdTimer);
-                if (!isLongPress) {
-                    increment(day, dayCard);
-                }
-            });
-
-            dayCard.addEventListener('mouseleave', () => {
-                clearTimeout(holdTimer);
-            });
-
-            // TOUCH EVENTS for mobile
-            dayCard.addEventListener('touchstart', (e) => {
-                isLongPress = false;
-                holdTimer = setTimeout(() => {
-                    isLongPress = true;
-                    decrement(day, dayCard);
-                    // Provide haptic feedback for long press trigger
-                    if (navigator.vibrate) navigator.vibrate(50);
-                }, 600); // Slightly longer for touch to avoid accidental triggers while scrolling
-            }, { passive: true });
-
-            dayCard.addEventListener('touchmove', () => {
-                // If moving/scrolling, cancel the hold
-                clearTimeout(holdTimer);
-            });
-
-            dayCard.addEventListener('touchend', (e) => {
-                clearTimeout(holdTimer);
-                e.preventDefault(); // Always prevent default to stop mouse emulation
-                if (!isLongPress) {
-                    increment(day, dayCard);
                 }
             });
 
@@ -143,7 +145,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (currentVal > 0) {
             habitData[key] = currentVal - 1;
             updateCardVisuals(card, day, habitData[key]);
-            triggerAnim(card); // maybe different anim for decrease?
+            triggerAnim(card);
             saveData();
 
             // Haptic feedback if available (mobile)
@@ -156,10 +158,15 @@ document.addEventListener('DOMContentLoaded', () => {
         countSpan.textContent = count > 0 ? count : '';
 
         if (count > 0) {
-            card.classList.add('active');
+            dayCardSetActive(card, true);
         } else {
-            card.classList.remove('active');
+            dayCardSetActive(card, false);
         }
+    }
+
+    function dayCardSetActive(card, isActive) {
+        if (isActive) card.classList.add('active');
+        else card.classList.remove('active');
     }
 
     function triggerAnim(card) {

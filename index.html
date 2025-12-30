@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,6 +10,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
 </head>
+
 <body>
     <div class="background-blobs">
         <div class="blob blob-1"></div>
@@ -18,11 +20,25 @@
 
     <main class="glass-container">
         <header>
-            <h1 id="month-year-display">Month Year</h1>
-            <div class="total-gains-container">
-                <span class="label">Total Gains</span>
-                <span id="total-count">0</span>
+            <button id="prev-month" class="nav-btn" aria-label="Previous Month">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="15 18 9 12 15 6"></polyline>
+                </svg>
+            </button>
+            <div class="header-center">
+                <h1 id="month-year-display">Month Year</h1>
+                <div class="total-gains-container">
+                    <span class="label">Total Gains</span>
+                    <span id="total-count">0</span>
+                </div>
             </div>
+            <button id="next-month" class="nav-btn" aria-label="Next Month">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="9 18 15 12 9 6"></polyline>
+                </svg>
+            </button>
         </header>
 
         <section class="calendar-wrapper">
@@ -41,10 +57,11 @@
         </section>
 
         <footer>
-            <p class="hint">Click to Add · Hold to Reduce</p>
+            <p class="hint">Click to Add · Dbl Click to Reduce</p>
         </footer>
     </main>
 
     <script src="script.js"></script>
 </body>
+
 </html>
